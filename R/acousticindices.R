@@ -72,7 +72,7 @@
 #' # Directory containing .wav files
 #' path_folder_audios <- "C:/path/to/your/audio/files"
 #'
-#' # Calibration parameters (SM4 preset)
+#' # Calibration parameters (Wildlife acoustics SM4 recorder preset)
 #' calibration_parameters <- "SM4"
 #'
 #' # Enable progress reporting (optional)
