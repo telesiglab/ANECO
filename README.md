@@ -11,7 +11,7 @@ ANECO (Analysis of ECOacoustics) is an R package for:
 
 ```r
 # install.packages("remotes")
-remotes::install_github("TELESIG/ANECO")
+remotes::install_github("telesiglab/ANECO")
 
 library(ANECO)
 
