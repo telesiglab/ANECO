@@ -45,6 +45,8 @@
 #'   Default is \code{"files"}.
 #'
 #' @details
+#' \strong{Spectral integration.} Calibrated power spectral density is converted to power per FFT bin using the bin width \code{sample_rate / round(wl)} before calculating sound levels and calibrated indices.
+#'
 #' \strong{Minute segmentation.} Each \code{.wav} file is read in 60-second blocks. The final segment is included only if its duration is at least 30 seconds.
 #'
 #' \strong{Index selection.} \code{sel.ind} can be \code{"all"} or a vector of specific index names. Available index codes can be inspected via \code{aneco_list_indices()} or using \code{ANECO::indices_catalog}.  When \code{sel.ind = "all"}, \code{exclude} removes indices from the full set; when \code{exclude = "none"}, nothing is removed. When \code{noise.ind = TRUE}, a predefined subset required for rain/noise classification is added to the selection if missing.
@@ -285,6 +287,12 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
 
 
         unlink(tempWav)
+
+        # Integrate PSD (power per Hz) into power per FFT bin before
+        # computing band levels, A-weighted levels, and calibrated indices.
+        bin_width <- wav@samp.rate / round(wl)
+        datCalib[-1, -1] <- datCalib[-1, -1, drop = FALSE] +
+          10 * log10(bin_width)
 
         #Compute dBA
         f_dBA <- datCalib[1, 2:ncol(datCalib)]

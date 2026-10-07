@@ -73,6 +73,8 @@ Computes a configurable set of acoustic indices for 1-minute segments from all \
 The output is a minute-level table including identification fields parsed from file names (using \code{prefix.format}) and the requested indices. The function supports parallelization either across audio files (\code{parallel = "files"}) or across minutes within each file (\code{parallel = "minutes"}), and can optionally write the results to a CSV file in \code{dir}.
 
 
+\strong{Spectral integration.} Calibrated power spectral density is converted to power per FFT bin using the bin width \code{sample_rate / round(wl)} before calculating sound levels and calibrated indices.
+
 \strong{Minute segmentation.} Each \code{.wav} file is read in 60-second blocks. The final segment is included only if its duration is at least 30 seconds.
 
 \strong{Index selection.} \code{sel.ind} can be \code{"all"} or a vector of specific index names. Available index codes can be inspected via \code{aneco_list_indices()} or using \code{ANECO::indices_catalog}.  When \code{sel.ind = "all"}, \code{exclude} removes indices from the full set; when \code{exclude = "none"}, nothing is removed. When \code{noise.ind = TRUE}, a predefined subset required for rain/noise classification is added to the selection if missing.
