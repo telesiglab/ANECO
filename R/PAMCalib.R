@@ -166,31 +166,40 @@ PAMCalib <- function(...,atype='PSD',plottype='Both',envi='Air',calib=0,ctype = 
       P <- (X/N)^2
 
       #Compute single-side power spectrum (EQUATION 9)
-      Pss <- 2*P[0:round(N/2)+1,]
+      # FFT row 1 is DC; subsequent rows are k * Fs / N.
+      bins <- 0:floor(N/2)
+      Pss <- P[bins + 1, , drop = FALSE]
+      sided_scale <- rep(2, length(bins))
+      sided_scale[1] <- 1
+      if (N %% 2 == 0) sided_scale[length(sided_scale)] <- 1
+      Pss <- Pss * sided_scale
 
-      #Compute frequencies of DFT bins
-      f <- floor(Fs/2)*seq(1/(N/2),1,len=N/2)
-      flow <- which(f >= lcut)[1]			#find index of lcut frequency
-      fhigh <- max(which(f <= hcut))		#find index of hcut frequency
-      f <- f[flow:fhigh]					#limit frequencies to user-defined range
-      nf <- length(f)						#number of frequency bins
+      # Keep the same frequency bins in both the spectrum and its labels.
+      f <- bins * Fs/N
+      selected <- which(f >= lcut & f <= hcut)
+      if (!length(selected)) {
+        stop("No FFT frequencies fall within lcut and hcut.")
+      }
+      f <- f[selected]
+      Pss <- Pss[selected, , drop = FALSE]
+      nf <- length(f)
 
 
       #Compute PSD in dB if selected
       if (atype == 'PSD') {
         B <- (1/N)*(sum((w/alpha)^2))		#noise power bandwidth (EQUATION 12)
         delf <- Fs/N;						#frequency bin width
-        a <- 10*log10((1/(delf*B))*Pss[flow:fhigh,]/(pref^2))-S
+        a <- 10*log10((1/(delf*B))*Pss/(pref^2))-S
       }									#PSD (EQUATION 11)
 
       #Compute power spectrum in dB if selected
       if (atype == 'PowerSpec') {
-        a <- 10*log10(Pss[flow:fhigh,]/(pref^2))-S
+        a <- 10*log10(Pss/(pref^2))-S
       }									#EQUATION 10
 
       #Compute broadband level if selected
       if (atype == 'Broadband') {
-        a <- 10*log10(colSums(Pss[flow:fhigh,])/(pref^2))-S
+        a <- 10*log10(colSums(Pss)/(pref^2))-S
       }									#EQUATION 17
 
       #Compute 1/3-octave band levels if selected
