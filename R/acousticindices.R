@@ -56,6 +56,7 @@
 #'
 #' @return A data.frame with one row per analyzed minute. Includes identification columns
 #'   (\code{Name}, \code{Code}, \code{Site}, \code{RecorderID}, \code{Date}, \code{Year}, \code{Month}, \code{Day}, \code{Hour}, \code{Minute}, \code{Duration}) and the requested index columns. Files/minutes that fail processing are omitted; the function may emit a warning listing file names that produced errors.
+#'   If no valid minutes remain, returns an empty data.frame and does not write a CSV file.
 #'
 #' @references
 #' \itemize{
@@ -176,7 +177,11 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
   # Load file names
   files <- list.files(path = dir, pattern = "wav$", ignore.case = T, full.names = T)
 
-  filenumber <- 1:length(files)
+  if (!length(files)) {
+    warning("No WAV files were found in the specified directory.")
+    return(data.frame())
+  }
+  filenumber <- seq_along(files)
 
 
   # Habilita el manejo de progreso
@@ -1065,19 +1070,23 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
   cat('Processing time: ', phours, "h ", pmin, 'min \n')
 
   rownames(nd) <- NULL
-  NAcol <- apply(X = nd, MARGIN = 2, FUN = function(x){
-    all(is.na(x[-1]))})
-
-  filtro1 <- nd[ ,c(which(NAcol == FALSE))]
-
-  NArow <- apply(X = filtro1, MARGIN = 1, FUN = function(x){
-    all(is.na(x[-1]))})
-  filtro2 <- filtro1[c(which(NArow == FALSE)), ]
-
-  errores <- filtro1[c(which(NArow == TRUE)), ][, 1]
-  if(length(errores) > 0){
-   warning("The following files produced errors: \n", paste(errores, collapse = ", "))
+  if (!nrow(nd)) {
+    warning("No valid minutes were processed.")
+    return(nd)
   }
+
+  # Exclude Name when checking failed rows, but inspect every value in columns.
+  NArow <- apply(nd[, setdiff(names(nd), "Name"), drop = FALSE], 1,
+                 function(x) all(is.na(x)))
+  errores <- nd$Name[NArow]
+  if (length(errores)) {
+    warning("The following files produced errors: \n", paste(errores, collapse = ", "))
+  }
+  filtro2 <- nd[!NArow, , drop = FALSE]
+  if (!nrow(filtro2)) return(filtro2)
+
+  NAcol <- vapply(filtro2, function(x) all(is.na(x)), logical(1))
+  filtro2 <- filtro2[, !NAcol, drop = FALSE]
 
   if(save.file) {
     codigoarchivo <- filtro2$Code[1]

@@ -65,6 +65,7 @@ Default is \code{"files"}.}
 \value{
 A data.frame with one row per analyzed minute. Includes identification columns
   (\code{Name}, \code{Code}, \code{Site}, \code{RecorderID}, \code{Date}, \code{Year}, \code{Month}, \code{Day}, \code{Hour}, \code{Minute}, \code{Duration}) and the requested index columns. Files/minutes that fail processing are omitted; the function may emit a warning listing file names that produced errors.
+  If no valid minutes remain, returns an empty data.frame and does not write a CSV file.
 }
 \description{
 Computes a configurable set of acoustic indices for 1-minute segments from all \code{.wav} audio files found in \code{dir}. Indices can be computed from calibrated spectra (absolute SPL; via \code{\link[ANECO]{PAMCalib}}) and, optionally, a subset of commonly used soundscape indices from \pkg{seewave} and \pkg{soundecology} (computed without the SPL calibration step, using package defaults).
