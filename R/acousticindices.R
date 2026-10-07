@@ -12,7 +12,7 @@
 #'     \item a character scalar selecting a recorder preset: \code{"SM4"},
 #'       \code{"SMmini"}, or \code{"SM2+"}.
 #'   }
-#'   Where \code{micsens} is microphone sensitivity (dB re 1 V/\eqn{\mu}Pa), \code{gain} is recorder gain (dB), and \code{vADC} is the ADC zero-to-peak voltage (V). For background and recommended calibration practice, see Merchant et al.
+#'   Where \code{micsens} is microphone sensitivity (dB re 1 V/Pa), \code{gain} is recorder gain (dB), and \code{vADC} is the ADC zero-to-peak voltage (V). Sensitivity is converted internally to dB re 1 V/\eqn{\mu}Pa for SPL calibration. For background and recommended calibration practice, see Merchant et al.
 #'
 #' @param sel.ind Character vector specifying which indices to compute. Use \code{"all"} (default) to compute all indices implemented in this function, or provide a character vector of index names (e.g., \code{c("ACI","ADI","msldB_bio")}). Available index codes can be inspected via \code{aneco_list_indices()} or using \code{ANECO::indices_catalog}. See \strong{Details}.
 #'
@@ -278,7 +278,10 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
 
 
         # Calibration process
-        datCalib <- ANECO::PAMCalib(atype = 'PSD', N = wl, timestring = "", r = 0, outwrite = 1, plottype = "None", calib = 1, envi = "Air", ctype = "TS", Mh = micsens, G = gain, vADC = vADC, tempWav = tempWav, ifile = "", welch = "")
+        # PAMCalib uses a pressure reference in microPa, while recorder
+        # sensitivities supplied through calibparam are expressed in V/Pa.
+        # 1 Pa = 1e6 microPa, so the equivalent sensitivity is 120 dB lower.
+        datCalib <- ANECO::PAMCalib(atype = 'PSD', N = wl, timestring = "", r = 0, outwrite = 1, plottype = "None", calib = 1, envi = "Air", ctype = "TS", Mh = micsens - 120, G = gain, vADC = vADC, tempWav = tempWav, ifile = "", welch = "")
 
 
         unlink(tempWav)

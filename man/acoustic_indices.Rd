@@ -30,7 +30,7 @@ acoustic_indices(
   \item a character scalar selecting a recorder preset: \code{"SM4"},
     \code{"SMmini"}, or \code{"SM2+"}.
 }
-Where \code{micsens} is microphone sensitivity (dB re 1 V/\eqn{\mu}Pa), \code{gain} is recorder gain (dB), and \code{vADC} is the ADC zero-to-peak voltage (V). For background and recommended calibration practice, see Merchant et al.}
+Where \code{micsens} is microphone sensitivity (dB re 1 V/Pa), \code{gain} is recorder gain (dB), and \code{vADC} is the ADC zero-to-peak voltage (V). Sensitivity is converted internally to dB re 1 V/\eqn{\mu}Pa for SPL calibration. For background and recommended calibration practice, see Merchant et al.}
 
 \item{sel.ind}{Character vector specifying which indices to compute. Use \code{"all"} (default) to compute all indices implemented in this function, or provide a character vector of index names (e.g., \code{c("ACI","ADI","msldB_bio")}). Available index codes can be inspected via \code{aneco_list_indices()} or using \code{ANECO::indices_catalog}. See \strong{Details}.}
 
