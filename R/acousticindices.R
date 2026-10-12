@@ -49,6 +49,8 @@
 #'
 #' \strong{Mixed sample rates.} Results are combined by column name. Energy bands unavailable at a file's sample rate are filled with \code{NA}, rather than zero.
 #'
+#' \strong{Acoustic activity.} Activity is detected above the estimated background plus 3 dB in the corresponding frequency band. \code{AAdur} and \code{AAduranth} report the median, across frequency bins, of mean active-run lengths measured in spectral frames; bins without activity contribute zero.
+#'
 #' \strong{Minute segmentation.} Each \code{.wav} file is read in 60-second blocks. The final segment is included only if its duration is at least 30 seconds.
 #'
 #' \strong{Index selection.} \code{sel.ind} can be \code{"all"} or a vector of specific index names. Available index codes can be inspected via \code{aneco_list_indices()} or using \code{ANECO::indices_catalog}.  When \code{sel.ind = "all"}, \code{exclude} removes indices from the full set; when \code{exclude = "none"}, nothing is removed. When \code{noise.ind = TRUE}, a predefined subset required for rain/noise classification is added to the selection if missing.
@@ -566,25 +568,7 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
             #logical matrix...
             temp <- BioMatrix[,f] > BK_Towsey[f] + 3
 
-            temp2 <- temp*1 # convertir a 0/1
-            #encontrar numeros consecutivos
-            rl <- rle(temp2)
-            len = rl$lengths
-            v =  rl$value
-            if (length(v) == 1 )
-            {
-              if   (v == 0) {AAdur[f] = 0 }
-              else {AAdur[f] = len }
-              next
-            }
-            cumsum = NULL
-            cntAA = 0
-            for ( qq in  seq(from = 2, to = length(v), by =2) )
-            {
-              cntAA = cntAA + 1
-              cumsum[cntAA] = len[qq]
-            }
-            AAdur[f] = mean(cumsum)
+            AAdur[f] = .aneco_active_run_mean(temp)
           }
           AAdur = median(AAdur)
         }
@@ -593,14 +577,14 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
           if("AAanth" %in% sel.ind){
             AAanth = NULL
             for (f in 1:length(AntMatrix) ) {
-              AAanth[f] =  length( AntMatrix[, f][ AntMatrix[, f] > BK_Towsey[f] + 3 ] )/ length (AntMatrix[, f]) #proporcion
+              AAanth[f] =  length( AntMatrix[, f][ AntMatrix[, f] > BK_Towsey_anth[f] + 3 ] )/ length (AntMatrix[, f]) #proporcion
             }
             AAanth = sum(AAanth)
           }
           if("AAcanth" %in% sel.ind){
             AAcanth = NULL
             for (f in 1:length(AntMatrix) ) {
-              AAcanth[f] = (length( AntMatrix[, f][ AntMatrix[, f] > BK_Towsey[f] + 3 ]))
+              AAcanth[f] = (length( AntMatrix[, f][ AntMatrix[, f] > BK_Towsey_anth[f] + 3 ]))
             }
             AAcanth = sum(AAcanth)
           }
@@ -609,27 +593,8 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
             AAduranth = NULL
             for (f in 1:length(AntMatrix) ) {
               #logical matrix...
-              temp <- AntMatrix[,f] > BK_Towsey[f] + 3
-
-              temp2 <- temp*1 # convertir a 0/1
-              #encontrar numeros consecutivos
-              rl <- rle(temp2)
-              len = rl$lengths
-              v =  rl$value
-              if (length(v) == 1 )
-              {
-                if   (v == 0) {AAduranth[f] = 0 }
-                else {AAduranth[f] = len }
-                next
-              }
-              cumsum = NULL
-              cntAA = 0
-              for ( qq in  seq(from = 2, to = length(v), by =2) )
-              {
-                cntAA = cntAA + 1
-                cumsum[cntAA] = len[qq]
-              }
-              AAduranth[f] = mean(cumsum)
+              temp <- AntMatrix[,f] > BK_Towsey_anth[f] + 3
+              AAduranth[f] = .aneco_active_run_mean(temp)
             }
             AAduranth = median(AAduranth)
           }
@@ -1094,4 +1059,11 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
     utils::write.csv(filtro2, file_path,row.names = FALSE)
   }
   return(filtro2)
+}
+
+# Mean length of active runs, in spectral frames.
+.aneco_active_run_mean <- function(active) {
+  runs <- rle(active)
+  lengths <- runs$lengths[runs$values]
+  if (length(lengths)) mean(lengths) else 0
 }

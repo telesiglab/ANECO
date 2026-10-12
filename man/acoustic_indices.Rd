@@ -78,6 +78,8 @@ The output is a minute-level table including identification fields parsed from f
 
 \strong{Mixed sample rates.} Results are combined by column name. Energy bands unavailable at a file's sample rate are filled with \code{NA}, rather than zero.
 
+\strong{Acoustic activity.} Activity is detected above the estimated background plus 3 dB in the corresponding frequency band. \code{AAdur} and \code{AAduranth} report the median, across frequency bins, of mean active-run lengths measured in spectral frames; bins without activity contribute zero.
+
 \strong{Minute segmentation.} Each \code{.wav} file is read in 60-second blocks. The final segment is included only if its duration is at least 30 seconds.
 
 \strong{Index selection.} \code{sel.ind} can be \code{"all"} or a vector of specific index names. Available index codes can be inspected via \code{aneco_list_indices()} or using \code{ANECO::indices_catalog}.  When \code{sel.ind = "all"}, \code{exclude} removes indices from the full set; when \code{exclude = "none"}, nothing is removed. When \code{noise.ind = TRUE}, a predefined subset required for rain/noise classification is added to the selection if missing.
