@@ -47,6 +47,8 @@
 #' @details
 #' \strong{Spectral integration.} Calibrated power spectral density is converted to power per FFT bin using the bin width \code{sample_rate / round(wl)} before calculating sound levels and calibrated indices.
 #'
+#' \strong{Mixed sample rates.} Results are combined by column name. Energy bands unavailable at a file's sample rate are filled with \code{NA}, rather than zero.
+#'
 #' \strong{Minute segmentation.} Each \code{.wav} file is read in 60-second blocks. The final segment is included only if its duration is at least 30 seconds.
 #'
 #' \strong{Index selection.} \code{sel.ind} can be \code{"all"} or a vector of specific index names. Available index codes can be inspected via \code{aneco_list_indices()} or using \code{ANECO::indices_catalog}.  When \code{sel.ind = "all"}, \code{exclude} removes indices from the full set; when \code{exclude = "none"}, nothing is removed. When \code{noise.ind = TRUE}, a predefined subset required for rain/noise classification is added to the selection if missing.
@@ -1052,17 +1054,14 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
         return(data.frame(z))
       }, future.seed = TRUE, future.scheduling = 1)
       future::plan(sequential)
-      df <- as.data.frame(do.call(rbind, mincl))
+      df <- as.data.frame(dplyr::bind_rows(mincl))
     }else{
       df <- data.frame(Name = name, Code = NA, Site = NA, RecorderID = NA, Date = NA, Year = NA, Month = NA, Day = NA, Hour = NA, Minute = NA, Duration = NA, TE_seewave = NA,  Ht_seewave = NA, Hf_seewave = NA, MAE_seewave = NA, NP = NA, ACI_soundecology = NA, ACI_seewave = NA, rough_seewave = NA, ADI_soundecology = NA, AEI_soundecology = NA, BIO_soundecology = NA, NDSI_soundecology = NA, msldBA_low = NA, msldBA_bio = NA, msldB_low = NA, msldB_bio = NA, BioPh = NA, AntPh = NA, avgAMP = NA, L10AMP = NA, AAanth = NA, AA = NA, AAcanth = NA, AAc = NA, AAduranth = NA, AAdur = NA, pk = NA, pkd = NA, pks = NA, Hf = NA,Ht = NA, NDSI = NA, Bio_anth = NA,  rough = NA, EI = NA, Hm = NA, HvPres = NA, HvSPL = NA, ACI = NA, ADI = NA, AEI = NA, Mamp = NA, dif_L10L90 = NA,  mdBGL = NA, SpecCent = NA, SpecIQR = NA, SpecQ3 = NA, SpecSkew = NA, SpecKurt = NA, S2N_chi = NA, dfreq = NA, freq.energy = NA, F01 = NA, F12 = NA, F23 = NA, F34 = NA, F45 = NA, F56 = NA, F67 = NA, F78 = NA, F89 = NA, F910 = NA, F1011 = NA, F11 = NA)
     }
     return(df)
   }, future.seed = TRUE, future.scheduling = 1)
   future::plan(sequential)
-  nd <- data.frame()
-  for (a in 1:length(ap)) {
-    nd <- rbind(nd, ap[[a]])
-  }
+  nd <- as.data.frame(dplyr::bind_rows(ap))
   cat("!Analysis completed! \n")
 
   ptimeS <- (proc.time()-time1)[3]
