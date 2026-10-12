@@ -278,6 +278,7 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
         }
 
         wav <- tuneR::mono(wav, which = channel)
+        sampling_rate <- wav@samp.rate
 
         tempWav <- tempfile(fileext = ".wav")
         tuneR::writeWave(wav, filename = tempWav)
@@ -295,7 +296,7 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
 
         # Integrate PSD (power per Hz) into power per FFT bin before
         # computing band levels, A-weighted levels, and calibrated indices.
-        bin_width <- wav@samp.rate / round(wl)
+        bin_width <- sampling_rate / round(wl)
         datCalib[-1, -1] <- datCalib[-1, -1, drop = FALSE] +
           10 * log10(bin_width)
 
@@ -827,7 +828,7 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
 
         # Extract the corresponding audio minute
 
-        if(any(c("ADI_soundecology", "AEI_soundecology", "ACI_soundecology", "ACI_seewave", "BIO_soundecology", "NDSI_soundecology", "MAE_seewave", "Hf_seewave", "Ht_seewave", "Ht_seewave", "rough_seewave", "NP", "SpecCent", "SpecIQR", "SpecQ3",  "SpecSkew", "SpecKurt", "dfreq", "efb", "dfb", "S2N_chi") %in% sel.ind)){
+        if(any(c("ADI_soundecology", "AEI_soundecology", "ACI_soundecology", "ACI_seewave", "BIO_soundecology", "NDSI_soundecology", "MAE_seewave", "Hf_seewave", "Ht_seewave", "TE_seewave", "rough_seewave", "NP", "SpecCent", "SpecIQR", "SpecQ3",  "SpecSkew", "SpecKurt", "dfreq", "efb", "dfb", "S2N_chi") %in% sel.ind)){
 
         if(i == max(minutos)){
           absdur <- durS - (i*60)
@@ -839,8 +840,6 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
 
 
         minwav <- tuneR::channel(minwav, which = channel)
-
-        sampling_rate <- minwav@samp.rate
 
         }
 
@@ -957,8 +956,10 @@ if(!parallel %in% c("files","minutes")) stop("parallel must be 'files' or 'minut
           Ht_raw <- seewave::th(envorni)
         }
 
-        if("Hf_seewave" %in% sel.ind){
+        if(any(c("Hf_seewave", "rough_seewave") %in% sel.ind)){
           suppressWarnings(speca <- seewave::spec(minwav, f = minwav@samp.rate, plot = FALSE))
+        }
+        if("Hf_seewave" %in% sel.ind){
           Hf_raw <- seewave::sh(speca)
         }
 
